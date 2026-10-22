@@ -4,36 +4,36 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Établissement scolaire — Portail parent</title>
-<meta name="theme-color" content="#1a3d7c">
-<link rel="icon" href="./assets/school-logo.png">
-<link rel="apple-touch-icon" href="./assets/school-logo.png">
+<meta name="theme-color" content="#12356f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ELIMU Parent">
+<link rel="icon" href="./assets/static/icon-192.png">
+<link rel="apple-touch-icon" href="./assets/static/icon-192.png">
 <link rel="manifest" href="./manifest.webmanifest">
-<link rel="stylesheet" href="./styles.css?v=20261007-mobile">
+<link rel="stylesheet" href="./styles.css?v=20261021-m1">\n<link rel="stylesheet" href="./motion.css?v=20261022-m1">
 </head>
 <body>
 <header class="topbar">
-  <img src="./assets/school-logo.png" alt="Logo" onerror="this.src='./assets/static/elimu-logo.png'">
-  <div class="titles"><h1 id="school-name">Établissement scolaire</h1><small id="app-subtitle">Portail parent · suivi scolaire de vos enfants</small><small class="brand-mark">ELIMU</small></div>
+  <img src="./assets/school-logo.png" alt="" width="46" height="46" onerror="this.onerror=null;this.src='./assets/static/elimu-logo.png'">
+  <div class="titles"><h1 id="school-name">Établissement scolaire</h1><small id="app-subtitle">Portail parent · suivi scolaire</small></div>
   <div class="topbar-actions">
     <button id="children-nav" class="topbar-action hidden" type="button" onclick="App.scrollToChildren()">Mes enfants</button>
-    <span id="status-pill" class="status-pill offline">Hors ligne</span>
+    <span id="status-pill" class="status-pill offline" role="status">Hors ligne</span>
   </div>
 </header>
-<aside id="contact-sidebar" class="contact-sidebar hidden" aria-label="Contacter la direction">
-  <div class="contact-sidebar-title">Besoin d’aide ?</div>
+<aside id="contact-sidebar" class="contact-fab hidden" aria-label="Contacter la direction">
   <a id="contact-direction-link" class="whatsapp-btn" href="#" target="_blank" rel="noopener">
-    <img src="./assets/static/whatsapp-icon.png" alt="Icône WhatsApp">
-    <span>Contacter la direction</span>
+    <img src="./assets/static/whatsapp-icon.png" alt="" width="24" height="24"><span>Contacter la direction</span>
   </a>
 </aside>
-<main id="app"></main>
-<script src="./online-only.js?v=20261015-standalone"></script>
-<script src="./config.js?v=20261015-standalone"></script>
-<script src="./sync-schedule.js?v=20261018-parent-windows"></script>
-<script src="./portal-config.js?v=20261015-standalone"></script>
-<script src="./api.js?v=20261006-1"></script>
-<script src="./storage.js?v=20261009-cache"></script>
-<script src="./app.js?v=20261018-parent-windows"></script>
-<script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js");</script>
+<main id="app"><noscript><div class="card">Activez JavaScript pour utiliser le portail.</div></noscript></main>
+<script src="./config.js?v=20261021-m1"></script>
+<script src="./sync-schedule.js?v=20261021-m1"></script>
+<script src="./portal-config.js?v=20261021-m1"></script>
+<script src="./api.js?v=20261021-m1"></script>
+<script src="./storage.js?v=20261021-m1"></script>
+<script src="./app.js?v=20261021-m1"></script>\n<script src="./motion.js?v=20261022-m1"></script>
+<script>if ("serviceWorker" in navigator) window.addEventListener("load", function () { navigator.serviceWorker.register("./sw.js").catch(function () {}); });</script>
 </body>
 </html>

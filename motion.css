@@ -1,0 +1,54 @@
+/* Portail parent — mouvement discret et confort tactile. Chargé après styles.css.
+   Visuel uniquement : aucun changement de données ni d'appel API.
+   Les animations d'entrée ne jouent qu'à l'ouverture et au changement d'écran
+   (attribut data-motion posé par motion.js), jamais à chaque actualisation. */
+
+:root{--m-ease:cubic-bezier(.23,1,.32,1)}
+@keyframes m-rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes m-pop{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}
+@keyframes m-fade{from{opacity:0}to{opacity:1}}
+@keyframes m-toast{from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes m-fab{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* Retour tactile */
+button,.topbar-action,.whatsapp-btn,summary{transition:transform 140ms var(--m-ease),background-color 150ms ease,box-shadow 150ms ease,opacity 150ms ease}
+button:active,.topbar-action:active,.whatsapp-btn:active{transform:scale(.97)}
+.status-pill{transition:background-color 200ms ease}
+input{transition:border-color 150ms ease,box-shadow 150ms ease}
+
+/* Entrée : première ouverture et passage connexion → tableau */
+body[data-motion="on"] #app>*{animation:m-rise 200ms var(--m-ease) backwards}
+body[data-motion="on"] #app>*:nth-child(2){animation-delay:30ms}
+body[data-motion="on"] #app>*:nth-child(3){animation-delay:60ms}
+body[data-motion="on"] #app>*:nth-child(4){animation-delay:90ms}
+body[data-motion="on"] #app>*:nth-child(n+5){animation-delay:120ms}
+body[data-motion="on"] .stat{animation:m-pop 200ms var(--m-ease) backwards}
+body[data-motion="on"] .stat:nth-child(2){animation-delay:30ms}
+body[data-motion="on"] .stat:nth-child(3){animation-delay:60ms}
+
+/* Ouverture d'un bloc repliable (action de la personne uniquement) */
+details.m-opened>*:not(summary){animation:m-fade 160ms ease-out}
+
+/* Notification et bouton de contact */
+.toast{animation:m-toast 180ms var(--m-ease) both}
+.contact-fab{animation:m-fab 200ms var(--m-ease) backwards}
+
+/* Confort tactile : cibles de 44 px */
+@media(pointer:coarse){
+  button,.topbar-action,.whatsapp-btn,summary{min-height:44px}
+}
+
+/* Petits écrans */
+@media(max-width:480px){
+  .grid{grid-template-columns:repeat(auto-fit,minmax(120px,1fr))}
+  .stat .n{font-size:18px}
+  .fee-vals{gap:6px;font-size:12px}
+  .card{padding:14px}
+}
+
+@media(prefers-reduced-motion:reduce){
+  *,::before,::after{animation-duration:.01ms!important;animation-delay:0ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+  button:active,.topbar-action:active,.whatsapp-btn:active{transform:none}
+}
+
+

@@ -15,11 +15,17 @@ const ELIMU_Api = {
     }, payload || {}));
     const readOnly = !["updateLicense", "registerInstallation"].includes(action);
     const target = readOnly ? url + "?" + new URLSearchParams(JSON.parse(body)) : url;
-    const res = await fetch(target, readOnly ? {} : {
-      method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body
-    });
+    const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 20000);
+    let res;
+    try {
+      res = await fetch(target, Object.assign({ signal: ctl.signal }, readOnly ? {} : {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body
+      }));
+    } catch (e) {
+      throw new Error(e.name === "AbortError" ? "Le service n'a pas répondu. Réessayez dans un instant." : "Connexion impossible. Vérifiez votre réseau.");
+    } finally { clearTimeout(timer); }
     if (!res.ok) {
       throw new Error("Erreur reseau (" + res.status + ")");
     }

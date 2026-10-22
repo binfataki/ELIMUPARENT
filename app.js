@@ -28,8 +28,7 @@ const App = {
       this.state.branding = Object.assign({}, (data && data.etablissement) || {}, { syncPolicy: data && data.syncPolicy });
       await ELIMU_Storage.setMeta("school_config", this.state.branding);
     } catch (e) {
-      // Le formulaire reste utilisable si l'identité distante est momentanément indisponible.
-      this.state.branding = {};
+      // Le formulaire reste utilisable ; on garde l'identité déjà en cache.
     }
   },
 
@@ -72,6 +71,7 @@ const App = {
       const data = this.normalizePayload(cached.data);
       if (!data.enfants.length) return;
       this.state.phone = cached.phone || "";
+      this.state.sessionToken = savedSession.token;
       this.state.data = data;
       this.state.view = "dashboard";
       this.state.syncPolicy = data.syncPolicy || this.state.branding.syncPolicy || {};
@@ -176,8 +176,12 @@ const App = {
   },
 
   render() {
+    // Conserver la saisie du numéro si l'écran est redessiné (identité, planning).
+    const ph = document.getElementById("phone-input"), focused = ph && document.activeElement === ph;
+    if (ph) { this.state.phone = ph.value; const rc = document.getElementById("remember-device"); if (rc) this.state.rememberDevice = rc.checked; }
     const detailsState = this.captureDetailsState();
     document.getElementById("app").innerHTML = this.state.view === "login" ? this.viewLogin() : this.viewDashboard();
+    if (focused) { const n = document.getElementById("phone-input"); if (n) { n.focus(); n.setSelectionRange(n.value.length, n.value.length); } }
     this.restoreDetailsState(detailsState);
     this.enforceExclusiveDetails();
     this.updateContactLink();
@@ -216,17 +220,15 @@ const App = {
 
   viewLogin() {
     return `
-      <div class="card">
+      <form class="card login" onsubmit="event.preventDefault();App.login()">
         <h2>Espace parent</h2>
-        <p class="meta">Entrez votre numero de telephone tel qu'enregistre par l'ecole.</p>
-        <div id="login-err"></div>
-        <label>Numero de telephone</label>
-        <input id="phone-input" type="tel" placeholder="+243 8xx xxx xxx" value="${this.state.phone}">
-        <label class="remember-device"><input id="remember-device" type="checkbox" ${this.state.rememberDevice ? "checked" : ""}> Mémoriser cet appareil pendant 30 jours</label>
-        <div class="form-actions">
-          <button id="login-btn" onclick="App.login()"><span class="button-label">Se connecter</span><span class="button-spinner" aria-hidden="true"></span></button>
-        </div>
-      </div>`;
+        <p class="meta">Entrez votre numéro de téléphone tel qu'enregistré par l'école.</p>
+        <div id="login-err" role="alert"></div>
+        <label for="phone-input">Numéro de téléphone</label>
+        <input id="phone-input" type="tel" inputmode="tel" autocomplete="tel" placeholder="+243 8xx xxx xxx" value="${this.escapeHtml(this.state.phone)}">
+        <label class="remember-device" for="remember-device"><input id="remember-device" type="checkbox" ${this.state.rememberDevice ? "checked" : ""}> Mémoriser cet appareil pendant 30 jours</label>
+        <div class="form-actions"><button id="login-btn" type="submit"><span class="button-label">Se connecter</span><span class="button-spinner" aria-hidden="true"></span></button></div>
+      </form>`;
   },
 
   async login() {
@@ -259,7 +261,7 @@ const App = {
       await this.initialiseCommuniqueMarker(data);
       this.render();
     } catch (e) {
-      document.getElementById("login-err").innerHTML = `<div class="err-box">${e.message}</div>`;
+      document.getElementById("login-err").innerHTML = `<div class="err-box">${this.escapeHtml(e.message)}</div>`;
     } finally {
       if (document.getElementById("login-btn") === btn) {
         btn.disabled = false;
@@ -271,7 +273,7 @@ const App = {
   },
 
   async refresh(silent = false) {
-    if (!navigator.onLine) { this.toast("Hors connexion"); return; }
+    if (!navigator.onLine) { if (!silent) this.toast("Hors connexion"); return; }
     try {
       const result = this.state.sessionToken
         ? await ELIMU_Api.restoreParentSession(this.state.sessionToken)
@@ -397,10 +399,10 @@ const App = {
             <div class="meta">Classe: ${this.escapeHtml(e.classe_nom || "-")} · Matricule: ${this.escapeHtml(e.matricule || "-")}</div>
             <div class="grid" style="margin-top:8px">
               <div class="stat fee-school"><div class="n">${this.fmt(e.scolarite_due, e.scolarite?.devise || d.currency)}</div><div class="l">Scolarité — dû</div></div>
-              <div class="stat balance-due"><div class="n">${this.fmt(e.solde)}</div><div class="l">Solde restant</div></div>
-              <div class="stat balance-paid"><div class="n">${this.fmt(e.total_paye)}</div><div class="l">Total déjà payé</div></div>
+              <div class="stat balance-due"><div class="n">${this.fmt(e.solde, e.scolarite?.devise || d.currency)}</div><div class="l">Solde restant</div></div>
+              <div class="stat balance-paid"><div class="n">${this.fmt(e.total_paye, e.scolarite?.devise || d.currency)}</div><div class="l">Total déjà payé</div></div>
             </div>
-            <div class="fee-breakdown"><h3>Autres frais — propres à la classe</h3>${e.frais.length ? `<div class="fee-grid fee-grid-head" aria-hidden="true"><span>Frais</span><span>Dû</span><span>Payé</span><span>Solde</span></div>${e.frais.map((f) => { const due = Number(f.dueCents || 0) / 100; const paid = Number(f.total || 0); const balance = Number(f.balanceCents || 0) / 100; return `<div class="fee-grid fee-grid-row fee-other"><strong>${this.escapeHtml(f.type)}</strong><span class="fee-value">${this.fmt(due, f.devise)}</span><span class="fee-value fee-paid">${this.fmt(paid, f.devise)}</span><span class="fee-value ${balance > 0 ? "fee-balance" : "fee-clear"}">${this.fmt(balance, f.devise)}</span></div>`; }).join("")}` : `<div class="fee-empty meta">Aucun autre frais configuré pour cette classe</div>`}</div>
+            <div class="fee-breakdown"><h3>Autres frais — propres à la classe</h3>${e.frais.length ? `${e.frais.map((f) => { const due = Number(f.dueCents || 0) / 100; const paid = Number(f.total || 0); const balance = Number(f.balanceCents || 0) / 100; return `<div class="fee-row"><strong>${this.escapeHtml(f.type)}</strong><div class="fee-vals"><span><small>Dû</small>${this.fmt(due, f.devise)}</span><span class="fee-paid"><small>Payé</small>${this.fmt(paid, f.devise)}</span><span class="${balance > 0 ? "fee-balance" : "fee-clear"}"><small>Solde</small>${this.fmt(balance, f.devise)}</span></div></div>`; }).join("")}` : `<div class="fee-empty meta">Aucun autre frais configuré pour cette classe</div>`}</div>
             ${e.paiements && e.paiements.length ? `
               <details data-state-key="payments-${this.escapeHtml(e.matricule || e.id || e.nom || "eleve")}" style="margin-top:12px">
                 <summary style="cursor:pointer;font-weight:700">Voir l'historique des paiements (${e.paiements.length})</summary>
