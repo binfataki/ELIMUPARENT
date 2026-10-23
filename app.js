@@ -214,8 +214,8 @@ const App = {
     document.title = name + " — Portail parent";
     const title = document.getElementById("school-name");
     if (title) title.textContent = name;
-    document.documentElement.style.setProperty("--primary", d.primary_color || "#1a3d7c");
-    document.documentElement.style.setProperty("--secondary", d.secondary_color || "#c99a2e");
+    document.documentElement.style.setProperty("--primary", "#092c63");
+    document.documentElement.style.setProperty("--secondary", "#e6b52a");
   },
 
   viewLogin() {
@@ -424,3 +424,4 @@ const App = {
 
 window.App = App;
 document.addEventListener("DOMContentLoaded", () => App.init());
+
