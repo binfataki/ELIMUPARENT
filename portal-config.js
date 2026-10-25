@@ -4,7 +4,7 @@ window.ELIMU_CONFIG = {
   appsScriptUrl: window.ELIMU_getCentralAppsScriptUrl(),
   schoolId: "",
   role: "PARENTS",
-  configVersion: "2026-10-08-parent-session-4"
+  configVersion: "2026-10-25-parent-qr-1"
 };
 
 window.ELIMU_PARENT_SESSION_KEY = "elimu_parent_session_" + window.ELIMU_CONFIG.configVersion;

@@ -43,6 +43,10 @@ const ELIMU_Api = {
     return this.call("parentSessionCreate", { telephone });
   },
 
+  async createParentSessionFromQr(qr) {
+    return this.call("parentQrSessionCreate", { qr });
+  },
+
   async restoreParentSession(token) {
     return this.call("parentSessionLookup", { token });
   },

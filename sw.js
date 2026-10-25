@@ -1,5 +1,5 @@
-const CACHE = "elimu-parent-pwa-20261021-v6";
-const CORE = ["./", "./index.html", "./styles.css?v=20261021-m1", "./config.js?v=20261021-m1", "./sync-schedule.js?v=20261021-m1", "./portal-config.js?v=20261021-m1", "./api.js?v=20261021-m1", "./storage.js?v=20261021-m1", "./app.js?v=20261021-m1", "./manifest.webmanifest", "./assets/school-logo.png", "./assets/static/elimu-logo.png", "./assets/static/whatsapp-icon.png", "./assets/static/icon-192.png", "./assets/static/icon-512.png"];
+const CACHE = "elimu-parent-pwa-20261025-qr-v1";
+const CORE = ["./", "./index.html", "./styles.css?v=20261025-qr", "./config.js?v=20261025-qr", "./sync-schedule.js?v=20261025-qr", "./portal-config.js?v=20261025-qr", "./api.js?v=20261025-qr", "./storage.js?v=20261025-qr", "./app.js?v=20261025-qr", "./motion.js?v=20261025-qr", "./manifest.webmanifest", "./assets/school-logo.png", "./assets/static/elimu-logo.png", "./assets/static/whatsapp-icon.png", "./assets/static/icon-192.png", "./assets/static/icon-512.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE).then((c) => Promise.allSettled(CORE.map((u) => c.add(u)))).then(() => self.skipWaiting()));

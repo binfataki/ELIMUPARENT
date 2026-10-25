@@ -2,7 +2,7 @@
 // Les trois portails (parent, professeur, direction) utilisent cette même
 // adresse. Le pilote ELIMU possède une autre configuration, séparée.
 window.ELIMU_ESTABLISHMENT_CONFIG = {
-  appsScriptUrl: "https://script.google.com/macros/s/AKfycbzEs3qzGB998iqLPdJc5kyxQd9r7B323J0cwBB4GL3mJTDa3E7mmZ9oUCzrKC-rBenh/exec",
+  appsScriptUrl: "https://script.google.com/macros/s/AKfycbxwkltTyiKnKO_BZbeK8e4rX8n_Oi0-emXotrqSMHn9Gbqc2HFL73SCKAxuq-5_uX-j/exec",
   configVersion: "2026-10-19-pwa-appscript"
 };
 
