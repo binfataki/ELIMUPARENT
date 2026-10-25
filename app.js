@@ -2,7 +2,7 @@
 // Session parent persistante facultative, avec publication automatique planifiée.
 
 const App = {
-  state: { phone: "", data: null, branding: {}, view: "login", loginMode: "qr", sessionToken: "", rememberDevice: false, syncPlan: null },
+  state: { phone: "", data: null, branding: {}, view: "login", loginMode: "qr", qrLoading: false, sessionToken: "", rememberDevice: false, syncPlan: null },
 
   async init() {
     await this.restoreCachedDashboard();
@@ -219,6 +219,12 @@ const App = {
   },
 
   viewLogin() {
+    if (this.state.qrLoading) return `
+      <section class="card login qr-loading" aria-live="polite" aria-busy="true">
+        <div class="loading-spinner" aria-hidden="true"></div>
+        <h2>Lecture de la carte…</h2>
+        <p class="meta">Le QR code a bien été scanné. Vérification de votre accès en cours.</p>
+      </section>`;
     if (this.state.loginMode === "phone") return `
       <form class="card login" onsubmit="event.preventDefault();App.login()">
         <button class="secondary login-back" type="button" onclick="App.showQrLogin()">← Scanner la carte</button>
@@ -281,7 +287,7 @@ const App = {
           if (!this.qrScanActive || !video.videoWidth) { if (this.qrScanActive) requestAnimationFrame(scan); return; }
           try {
             const codes = await this.qrDetector.detect(video);
-            if (codes && codes[0]?.rawValue) { this.qrScanActive = false; await this.loginWithQr(codes[0].rawValue); return; }
+            if (codes && codes[0]?.rawValue) { this.qrScanActive = false; await this.loginWithQr(codes[0].rawValue, true); return; }
           } catch (_) {}
           requestAnimationFrame(scan);
         };
@@ -300,18 +306,22 @@ const App = {
     if (reset && scanner) scanner.classList.add("hidden");
   },
 
-  async loginWithQr(value) {
+  async loginWithQr(value, scanned = false) {
     const matricule = this.extractMatricule(value);
     const err = document.getElementById("login-err");
     if (!matricule) { if (err) err.innerHTML = `<div class="err-box">Scannez une carte valide.</div>`; return; }
+    if (scanned && navigator.vibrate) navigator.vibrate(80);
     this.qrScanActive = false;
     const help = document.getElementById("qr-help");
     if (help) help.textContent = "Vérification de la carte…";
+    this.stopQrScanner(false);
+    this.state.qrLoading = true;
+    this.render();
     try {
       const session = await ELIMU_Api.createParentSessionFromQr(matricule);
       const data = this.normalizePayload(session && session.data ? session.data : session);
       if (!data?.enfants?.length) throw new Error("Aucun enfant associé à cette carte");
-      this.stopQrScanner(false);
+      this.state.qrLoading = false;
       this.state.phone = "";
       this.state.sessionToken = session.token || "";
       this.state.rememberDevice = false;
@@ -324,8 +334,12 @@ const App = {
       await this.initialiseCommuniqueMarker(data);
       this.render();
     } catch (e) {
-      if (err) err.innerHTML = `<div class="err-box">${this.escapeHtml(e.message)}</div>`;
-      if (help) help.textContent = "Carte non reconnue. Réessayez ou utilisez le numéro de téléphone.";
+      this.state.qrLoading = false;
+      this.render();
+      const loginError = document.getElementById("login-err");
+      const qrHelp = document.getElementById("qr-help");
+      if (loginError) loginError.innerHTML = `<div class="err-box">${this.escapeHtml(e.message)}</div>`;
+      if (qrHelp) qrHelp.textContent = "Carte non reconnue. Réessayez ou utilisez le numéro de téléphone.";
     }
   },
 
