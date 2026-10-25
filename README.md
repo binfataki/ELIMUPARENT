@@ -2,6 +2,11 @@
 
 Dépôt autonome du portail parent ELIMU.
 
+Avant chaque hébergement client, remplacer uniquement `assets/school-logo.png`
+par le logo de l’établissement. Le favicon, l’icône PWA, l’icône de l’en-tête
+et le logo affiché dans le portail utilisent tous ce même fichier. Modifier
+également l’URL Apps Script dans `config.js`.
+
 Le portail s’ouvre directement depuis `index.html`, utilise son propre dossier `assets/` et lit les données publiées par Apps Script en lecture seule.
 
 Le fichier `config.js` contient l’URL Apps Script de l’établissement. Le fichier `portal-config.js` contient la configuration propre aux sessions parents.
