@@ -14,10 +14,7 @@ const ELIMU_Api = {
       role: window.ELIMU_CONFIG.role
     }, payload || {}));
     const readOnly = !["updateLicense", "registerInstallation"].includes(action);
-    const cacheUrl = window.ELIMU_ESTABLISHMENT_CONFIG && window.ELIMU_ESTABLISHMENT_CONFIG.parentCacheUrl;
-    const cacheable = ["parentSessionLookup", "publicConfig", "syncPolicy"].includes(action);
-    const origin = cacheable && cacheUrl ? cacheUrl : url;
-    const target = readOnly ? origin + "?" + new URLSearchParams(JSON.parse(body)) : origin;
+    const target = readOnly ? url + "?" + new URLSearchParams(JSON.parse(body)) : url;
     const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 20000);
     let res;
     try {
