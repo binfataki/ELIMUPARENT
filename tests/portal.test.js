@@ -369,19 +369,13 @@ function withCamera(P) {
   return track;
 }
 
-test('le bouton Scan se transforme sur place en zone caméra', () => {
+test('le scan principal ouvre directement la caméra sur l’écran de connexion', () => {
   const P = createPortal();
-  assert.equal(typeof P.App.openScanner, 'function');
-  assert.ok(!P.App.PAGES.includes('scan'));
-  P.show(parentData([kid()]), 'home', 'ELV-000001');
-  P.App.openScanner();
-  assert.equal(P.App.state.scanOpen, true);
-  assert.match(P.el('scan-nav').innerHTML, /id="qr-video"/);
-  assert.match(P.el('scan-nav').innerHTML, /Cadrez le QR code/);
-  P.App.openScanner();
-  assert.equal(P.App.state.scanOpen, false);
-  assert.equal(P.el('scan-nav').innerHTML.includes('qr-video'), false);
-  assert.match(read('index.html'), /data-page="scan"[^>]*class="scan-nav"[^>]*onclick="App\.openScanner\(\)"/);
+  P.App.render();
+  assert.match(P.html(), /id="qr-scanner" class="qr-scanner"/);
+  assert.match(P.html(), /id="qr-video"/);
+  assert.match(P.html(), /Ouverture de la caméra/);
+  assert.ok(!read('index.html').includes('data-page="scan"'));
 });
 
 test('écran de connexion : le scan reste disponible (caméra et saisie manuelle)', () => {
@@ -500,12 +494,11 @@ const read = (f) => fs.readFileSync(path.join(ROOT, f), 'utf8');
 const css = read('styles.css').replace(/\s+/g, ' ');
 const html = read('index.html');
 
-test('barre basse mobile : Accueil + Scan au centre + Mes enfants', () => {
+test('barre basse mobile : Accueil + Mes enfants, sans scan après connexion', () => {
   const nav = html.match(/<nav id="bottom-nav"[\s\S]*?<\/nav>/)[0];
   const pages = [...nav.matchAll(/data-page="(\w+)"/g)].map((m) => m[1]);
-  assert.deepEqual(pages, ['home', 'scan', 'children']);
+  assert.deepEqual(pages, ['home', 'children']);
   assert.match(nav, /data-page="children" class="children-nav-btn"[^>]*onclick="App.showChildren\(\)"/);
-  assert.match(nav, /data-page="scan" class="scan-nav"[^>]*onclick="App.openScanner\(\)"/);
   assert.match(css, /\.bottom-nav\{position:fixed;left:0;right:0;bottom:0;[^}]*grid-template-columns:1fr 1\.5fr/);
   assert.match(css, /\.bottom-nav button\.children-nav-btn,\.bottom-nav button\.children-nav-btn\.active\{background:var\(--primary\);color:#fff;/);
   assert.match(html, /viewport-fit=cover/);
@@ -517,13 +510,14 @@ test('barre basse fixée en bas de l’écran, sans masquer le contenu', () => {
   assert.ok(m && Number(m[1]) >= 92, 'le contenu défile au-dessus de la barre');
   const fab = css.match(/\.contact-fab\{bottom:calc\((\d+)px/);
   assert.ok(fab && Number(fab[1]) >= 80, 'le bouton WhatsApp est au-dessus de la barre');
-  assert.match(css, /\.bottom-nav \.scan-nav\{width:62px;height:62px;min-height:62px/);
+  assert.ok(!css.includes('scan-nav'), 'pas de zone Scan dans le portail connecté');
 });
 
 test('connexion : bouton de scan centré, grand et bien visible', () => {
   const P = createPortal();
   P.App.render();
-  assert.match(P.html(), /<button class="qr-primary-button"[^>]*><span class="qr-viewfinder" aria-hidden="true">[\s\S]*Scanner la carte de l'enfant[\s\S]*Appuyez ici pour ouvrir la caméra/);
+  assert.match(P.html(), /<div id="qr-scanner" class="qr-scanner"/);
+  assert.match(P.html(), /id="qr-video"/);
   assert.match(css, /\.qr-login\{text-align:center;/);
   assert.match(css, /\.qr-primary-button\{flex-direction:column;[^}]*min-height:220px;margin:18px auto 6px;[^}]*max-width:420px;text-align:center;border:2px solid var\(--secondary\)/);
   assert.match(css, /\.qr-viewfinder\{[^}]*animation:qr-pulse/);

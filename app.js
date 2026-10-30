@@ -6,7 +6,7 @@
 // uniquement l'affichage des paiements : aucun calcul financier n'est modifié ici.
 
 const App = {
-  state: { phone: "", data: null, branding: {}, view: "login", page: "home", selectedChild: "", loginMode: "qr", qrLoading: false, scanOpen: false, sessionToken: "", rememberDevice: false, syncPlan: null, fetchedAt: 0 },
+  state: { phone: "", data: null, branding: {}, view: "login", page: "home", selectedChild: "", loginMode: "qr", qrLoading: false, sessionToken: "", rememberDevice: false, syncPlan: null, fetchedAt: 0 },
 
   PAYMENT_WINDOW_HOURS: 42,
   // Tolérance sur l'heure de l'appareil (paiement daté légèrement dans le futur).
@@ -20,6 +20,7 @@ const App = {
     this.bindEvents();
     await this.restoreCachedDashboard();
     this.render();
+    if (this.state.view === "login" && this.state.loginMode === "qr") setTimeout(() => this.startQrScanner(), 0);
     // L'identité distante ne doit pas retarder l'affichage de la vue locale.
     this.loadBranding().then(() => this.render()).catch(() => {});
     // Le cache donne une vue immédiate ; la validation de session et les
@@ -252,14 +253,6 @@ const App = {
     const bottomNav = document.getElementById("bottom-nav");
     if (bottomNav) {
       bottomNav.classList.toggle("hidden", this.state.view !== "dashboard");
-      const scanNav = document.getElementById("scan-nav");
-      if (scanNav) {
-        scanNav.classList.toggle("scan-open", Boolean(this.state.scanOpen));
-        scanNav.setAttribute("aria-expanded", this.state.scanOpen ? "true" : "false");
-        scanNav.innerHTML = this.state.scanOpen
-          ? `<video id="qr-video" autoplay playsinline muted aria-label="Caméra de scan"></video><span class="scan-nav-help" id="qr-help">Cadrez le QR code</span>`
-          : `<span aria-hidden="true">▣</span><small>Scan</small>`;
-      }
       // Fiche et absences appartiennent à la section « Mes enfants ».
       const section = { child: "children", absences: "children" }[this.state.page] || this.state.page;
       bottomNav.querySelectorAll("[data-page]").forEach((button) => {
@@ -290,7 +283,6 @@ const App = {
   // toute navigation dans le portail coupe donc la caméra par sécurité.
   navigate(page, key, options = {}) {
     this.stopQrScanner(false);
-    this.state.scanOpen = false;
     this.state.page = page;
     if (key !== undefined && key !== null) this.state.selectedChild = String(key);
     if (!options.fromHistory) this.pushHistory(page, this.state.selectedChild);
@@ -312,19 +304,6 @@ const App = {
   showChildren() { this.navigate("children"); },
   openChild(key) { this.navigate("child", key); },
   openAbsences(key) { this.navigate("absences", key); },
-  openScanner() {
-    if (this.state.view !== "dashboard") return;
-    if (this.state.scanOpen) {
-      this.stopQrScanner(true);
-      this.state.scanOpen = false;
-      this.render();
-      return;
-    }
-    this.state.scanOpen = true;
-    this.render();
-    setTimeout(() => this.startQrScanner(), 0);
-  },
-
   confirmLogout() {
     const message = "Se déconnecter de cet appareil ? Les données enregistrées sur ce téléphone seront effacées.";
     if (typeof window.confirm !== "function" || window.confirm(message)) this.logout();
@@ -368,13 +347,12 @@ const App = {
         <h2>Espace parent</h2>
         <p class="meta">Scannez la carte de votre enfant pour accéder directement à vos enfants.</p>
         <div id="login-err" role="alert"></div>
-        <button class="qr-primary-button" type="button" onclick="App.startQrScanner()" aria-label="Scanner la carte de l'enfant pour se connecter"><span class="qr-viewfinder" aria-hidden="true"><span class="qr-button-icon">▣</span></span><strong>Scanner la carte de l'enfant</strong><small>Appuyez ici pour ouvrir la caméra</small></button>
         <label class="remember-device" for="remember-device-qr"><input id="remember-device-qr" type="checkbox" ${this.state.rememberDevice ? "checked" : ""}> Mémoriser cet appareil pendant 30 jours</label>
-        <div id="qr-scanner" class="qr-scanner hidden" aria-live="polite">
+        <div id="qr-scanner" class="qr-scanner" aria-live="polite">
           <video id="qr-video" autoplay playsinline muted></video>
           <div class="qr-frame" aria-hidden="true"></div>
-          <p id="qr-help" class="meta">Cadrez le QR code de la carte.</p>
-          <button class="secondary" type="button" onclick="App.stopQrScanner(true)">Fermer la caméra</button>
+          <p id="qr-help" class="meta">Ouverture de la caméra…</p>
+          <button class="secondary" type="button" onclick="App.startQrScanner()">Réactiver la caméra</button>
           <div class="qr-manual"><label for="qr-manual-input">Si la caméra n'est pas disponible</label><div class="row"><input id="qr-manual-input" placeholder="ELV-000001 ou QR complet"><button type="button" onclick="App.loginWithQr(document.getElementById('qr-manual-input').value)">Valider</button></div></div>
         </div>
         <button class="phone-login-button" type="button" onclick="App.showPhoneLogin()">Se connecter avec le numéro de téléphone</button>
@@ -382,7 +360,7 @@ const App = {
   },
 
   showPhoneLogin() { this.stopQrScanner(false); this.state.loginMode = "phone"; this.render(); },
-  showQrLogin() { this.stopQrScanner(false); this.state.loginMode = "qr"; this.render(); },
+  showQrLogin() { this.stopQrScanner(false); this.state.loginMode = "qr"; this.render(); setTimeout(() => this.startQrScanner(), 0); },
 
   extractMatricule(value) {
     const raw = String(value || "").trim();
@@ -494,7 +472,6 @@ const App = {
       }
       const remember = Boolean(this.state.rememberDevice);
       this.state.qrLoading = false;
-      this.state.scanOpen = false;
       this.state.phone = sameFamily ? this.state.phone : "";
       this.state.sessionToken = session.token || (sameFamily ? this.state.sessionToken : "");
       this.state.rememberDevice = remember && Boolean(this.state.sessionToken);
