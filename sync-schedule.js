@@ -25,7 +25,7 @@
     var current = now instanceof Date ? now : new Date();
     var jitterSeconds = hash(text(identity || "anonymous") + ":parent-window") % (PARENT_JITTER_MINUTES * 60);
     var candidates = [];
-    for (var dayOffset = 0; dayOffset <= 1; dayOffset++) {
+    for (var dayOffset = -1; dayOffset <= 1; dayOffset++) {
       var day = new Date(current.getFullYear(), current.getMonth(), current.getDate() + dayOffset);
       PARENT_WINDOWS.forEach(function (window) {
         var candidate = new Date(day.getFullYear(), day.getMonth(), day.getDate(), window.hour, window.minute, 0, 0);
@@ -35,8 +35,11 @@
     }
     candidates.sort(function (a, b) { return a - b; });
     var next = candidates.find(function (d) { return d.getTime() > current.getTime(); });
+    var past = candidates.filter(function (d) { return d.getTime() <= current.getTime(); });
+    var last = past.length ? past[past.length - 1] : null;
     return { group: 1, groupCount: 1, slotMinutes: PARENT_JITTER_MINUTES,
       nextAt: next ? next.toISOString() : null,
+      lastAt: last ? last.toISOString() : null,
       label: next ? next.toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" }) : "—" };
   }
   function anchors(role, policy) { return String(role).toUpperCase() === "PROFESSEUR" ? [policy.anchorTime, "12:00"] : [policy.anchorTime]; }
@@ -72,5 +75,11 @@
     }
     return { initial: arm(), cancel: function () { cancelled = true; if (timer) clearTimeout(timer); } };
   }
-  global.ELIMU_SYNC_SCHEDULE = { hash: hash, plan: plan, schedule: schedule };
+  // Dernier créneau déjà passé pour un parent (ISO) : permet un rattrapage unique
+  // à l'ouverture si le dernier snapshot local est plus ancien que ce créneau.
+  function lastSlot(role, identity, now) {
+    if (String(role).toUpperCase() !== "PARENTS") return null;
+    return parentPlan(identity, now).lastAt;
+  }
+  global.ELIMU_SYNC_SCHEDULE = { hash: hash, plan: plan, schedule: schedule, lastSlot: lastSlot };
 })(window);

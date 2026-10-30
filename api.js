@@ -34,7 +34,9 @@ const ELIMU_Api = {
     try { data = JSON.parse(raw); }
     catch (_) { throw new Error("Le service de l'établissement a renvoyé une réponse invalide. Vérifiez l'URL /exec et le déploiement Apps Script."); }
     if (!data.ok) {
-      throw new Error(data.message || data.error || "Erreur serveur");
+      const serverError = new Error(data.message || data.error || "Erreur serveur");
+      serverError.code = String(data.error || "");
+      throw serverError;
     }
     return Object.prototype.hasOwnProperty.call(data, "result") ? data.result : data;
   },

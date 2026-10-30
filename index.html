@@ -11,14 +11,14 @@
 <link rel="icon" href="./assets/school-logo.png">
 <link rel="apple-touch-icon" href="./assets/school-logo.png">
 <link rel="manifest" href="./manifest.webmanifest">
-<link rel="stylesheet" href="./styles.css?v=20261025-qr-loading"><link rel="stylesheet" href="./motion.css?v=20261025-qr-loading">
+<link rel="stylesheet" href="./styles.css?v=20261030-parent-refonte-2"><link rel="stylesheet" href="./motion.css?v=20261030-parent-refonte-2">
 </head>
 <body>
 <header class="topbar">
   <img src="./assets/school-logo.png" alt="Logo de l’établissement" width="46" height="46">
   <div class="titles"><h1 id="school-name">Établissement scolaire</h1><small id="app-subtitle">Portail parent · suivi scolaire</small></div>
   <div class="topbar-actions">
-    <button id="children-nav" class="topbar-action hidden" type="button" onclick="App.scrollToChildren()">Mes enfants</button>
+    <button id="logout-btn" class="topbar-action hidden" type="button" onclick="App.confirmLogout()">Quitter</button>
     <span id="status-pill" class="status-pill offline" role="status">Hors ligne</span>
   </div>
 </header>
@@ -28,12 +28,17 @@
   </a>
 </aside>
 <main id="app"><noscript><div class="card">Activez JavaScript pour utiliser le portail.</div></noscript></main>
-<script src="./config.js?v=20261025-qr-loading"></script>
-<script src="./sync-schedule.js?v=20261025-qr-loading"></script>
-<script src="./portal-config.js?v=20261025-qr-loading"></script>
-<script src="./api.js?v=20261025-qr-loading"></script>
-<script src="./storage.js?v=20261025-qr-loading"></script>
-<script src="./app.js?v=20261025-qr-loading"></script><script src="./motion.js?v=20261025-qr-loading"></script>
+<nav id="bottom-nav" class="bottom-nav hidden" aria-label="Navigation principale">
+  <button type="button" data-page="home" onclick="App.goHome()"><span aria-hidden="true">⌂</span><small>Accueil</small></button>
+  <button type="button" data-page="scan" class="scan-nav" aria-label="Scanner une carte" onclick="App.openScanner()"><span aria-hidden="true">▣</span><small>Scan</small></button>
+  <button type="button" data-page="children" onclick="App.showChildren()"><span aria-hidden="true">♙</span><small>Mes enfants</small></button>
+</nav>
+<script src="./config.js?v=20261030-parent-refonte-2"></script>
+<script src="./sync-schedule.js?v=20261030-parent-refonte-2"></script>
+<script src="./portal-config.js?v=20261030-parent-refonte-2"></script>
+<script src="./api.js?v=20261030-parent-refonte-2"></script>
+<script src="./storage.js?v=20261030-parent-refonte-2"></script>
+<script src="./app.js?v=20261030-parent-refonte-2"></script><script src="./motion.js?v=20261030-parent-refonte-2"></script>
 <script>if ("serviceWorker" in navigator) window.addEventListener("load", function () { navigator.serviceWorker.register("./sw.js").catch(function () {}); });</script>
 </body>
 </html>
