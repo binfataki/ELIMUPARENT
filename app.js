@@ -6,12 +6,12 @@
 // uniquement l'affichage des paiements : aucun calcul financier n'est modifié ici.
 
 const App = {
-  state: { phone: "", data: null, branding: {}, view: "login", page: "home", selectedChild: "", loginMode: "qr", qrLoading: false, sessionToken: "", rememberDevice: false, syncPlan: null, fetchedAt: 0 },
+  state: { phone: "", data: null, branding: {}, view: "login", page: "home", selectedChild: "", loginMode: "qr", qrLoading: false, scanOpen: false, sessionToken: "", rememberDevice: false, syncPlan: null, fetchedAt: 0 },
 
   PAYMENT_WINDOW_HOURS: 42,
   // Tolérance sur l'heure de l'appareil (paiement daté légèrement dans le futur).
   PAYMENT_FUTURE_SKEW_MS: 6 * 60 * 60 * 1000,
-  PAGES: ["home", "children", "child", "absences", "scan"],
+  PAGES: ["home", "children", "child", "absences"],
   // Codes serveur qui signifient que la session n'est plus valable : seuls ces
   // cas effacent la session et le cache local (jamais une simple panne réseau).
   SESSION_ERROR_CODES: ["SESSION_INVALIDE", "ACCES_REFUSE", "PARENT_NON_CONFIGURE"],
@@ -252,6 +252,14 @@ const App = {
     const bottomNav = document.getElementById("bottom-nav");
     if (bottomNav) {
       bottomNav.classList.toggle("hidden", this.state.view !== "dashboard");
+      const scanNav = document.getElementById("scan-nav");
+      if (scanNav) {
+        scanNav.classList.toggle("scan-open", Boolean(this.state.scanOpen));
+        scanNav.setAttribute("aria-expanded", this.state.scanOpen ? "true" : "false");
+        scanNav.innerHTML = this.state.scanOpen
+          ? `<video id="qr-video" autoplay playsinline muted aria-label="Caméra de scan"></video><span class="scan-nav-help" id="qr-help">Cadrez le QR code</span>`
+          : `<span aria-hidden="true">▣</span><small>Scan</small>`;
+      }
       // Fiche et absences appartiennent à la section « Mes enfants ».
       const section = { child: "children", absences: "children" }[this.state.page] || this.state.page;
       bottomNav.querySelectorAll("[data-page]").forEach((button) => {
@@ -282,6 +290,7 @@ const App = {
   // toute navigation dans le portail coupe donc la caméra par sécurité.
   navigate(page, key, options = {}) {
     this.stopQrScanner(false);
+    this.state.scanOpen = false;
     this.state.page = page;
     if (key !== undefined && key !== null) this.state.selectedChild = String(key);
     if (!options.fromHistory) this.pushHistory(page, this.state.selectedChild);
@@ -304,7 +313,15 @@ const App = {
   openChild(key) { this.navigate("child", key); },
   openAbsences(key) { this.navigate("absences", key); },
   openScanner() {
-    this.navigate("scan");
+    if (this.state.view !== "dashboard") return;
+    if (this.state.scanOpen) {
+      this.stopQrScanner(true);
+      this.state.scanOpen = false;
+      this.render();
+      return;
+    }
+    this.state.scanOpen = true;
+    this.render();
     setTimeout(() => this.startQrScanner(), 0);
   },
 
@@ -401,11 +418,9 @@ const App = {
   },
 
   async startQrScanner() {
-    const scanner = document.getElementById("qr-scanner");
     const video = document.getElementById("qr-video");
     const help = document.getElementById("qr-help");
-    if (!scanner || !video) return;
-    scanner.classList.remove("hidden");
+    if (!video) return;
     if (!navigator.mediaDevices?.getUserMedia) { if (help) help.textContent = "Caméra indisponible. Utilisez la saisie manuelle ci-dessous."; return; }
     try {
       if (!this.qrStream) this.qrStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }, audio: false });
@@ -479,6 +494,7 @@ const App = {
       }
       const remember = Boolean(this.state.rememberDevice);
       this.state.qrLoading = false;
+      this.state.scanOpen = false;
       this.state.phone = sameFamily ? this.state.phone : "";
       this.state.sessionToken = session.token || (sameFamily ? this.state.sessionToken : "");
       this.state.rememberDevice = remember && Boolean(this.state.sessionToken);
@@ -655,7 +671,6 @@ const App = {
     if (this.state.page === "children") return this.viewChildren();
     if (this.state.page === "child") return this.viewChild();
     if (this.state.page === "absences") return this.viewAbsences();
-    if (this.state.page === "scan") return this.viewScan();
     return this.viewHomeNew();
   },
 
@@ -731,10 +746,6 @@ const App = {
     if (!t) return "";
     const offline = typeof navigator !== "undefined" && navigator.onLine === false;
     return `<p class="updated-line meta">${offline ? "Hors connexion · " : ""}Dernière mise à jour : ${this.escapeHtml(this.dateTimeShort(t))}</p>`;
-  },
-
-  viewScan() {
-    return `<button class="back-link" type="button" onclick="App.goHome()">← Accueil</button><section class="card login qr-login"><h2>Scanner une carte</h2><p class="meta">Scannez la carte d’un enfant pour actualiser votre accès. Votre session reste enregistrée telle qu’elle est.</p><div id="login-err" role="alert"></div><div id="qr-scanner" class="qr-scanner" aria-live="polite"><video id="qr-video" autoplay playsinline muted></video><div class="qr-frame" aria-hidden="true"></div><p id="qr-help" class="meta">Cadrez le QR code de la carte.</p><button class="secondary" type="button" onclick="App.stopQrScanner(true);App.goHome()">Fermer la caméra</button><div class="qr-manual"><label for="qr-manual-input">Si la caméra n’est pas disponible</label><div class="row"><input id="qr-manual-input" placeholder="ELV-000001 ou QR complet"><button type="button" onclick="App.loginWithQr(document.getElementById('qr-manual-input').value)">Valider</button></div></div></div></section>`;
   },
 
   viewHomeNew() {

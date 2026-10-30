@@ -37,7 +37,7 @@ function createPortal({ online = true } = {}) {
   const P = { online, confirmAnswer: true, confirmCalls: [], timers: [], listeners: {}, mem: new Map(), log: [], pushed: [], toasts: [] };
   const appEl = new El('app'); let html = ''; let dynamic = {};
   Object.defineProperty(appEl, 'innerHTML', { get: () => html, set: (v) => { html = String(v); dynamic = {}; } });
-  const statics = { app: appEl, 'status-pill': new El('status-pill'), 'school-name': new El('school-name'), 'logout-btn': new El('logout-btn'), 'contact-sidebar': new El('contact-sidebar'), 'contact-direction-link': new El('contact-direction-link') };
+  const statics = { app: appEl, 'status-pill': new El('status-pill'), 'school-name': new El('school-name'), 'logout-btn': new El('logout-btn'), 'contact-sidebar': new El('contact-sidebar'), 'contact-direction-link': new El('contact-direction-link'), 'scan-nav': new El('scan-nav') };
   const nav = new El('bottom-nav');
   const navButtons = ['home', 'scan', 'children'].map((page) => { const b = new El('nav-' + page); b.dataset.page = page; return b; });
   nav.querySelectorAll = () => navButtons;

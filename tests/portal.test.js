@@ -369,19 +369,18 @@ function withCamera(P) {
   return track;
 }
 
-test('le scan ouvre une page dédiée dans le portail connecté', () => {
+test('le bouton Scan se transforme sur place en zone caméra', () => {
   const P = createPortal();
   assert.equal(typeof P.App.openScanner, 'function');
-  assert.equal(typeof P.App.viewScan, 'function');
-  assert.ok(P.App.PAGES.includes('scan'));
-  const scanHtml = P.show(parentData([kid()]), 'scan', 'ELV-000001');
-  assert.match(scanHtml, /id="qr-video"/);
-  assert.match(scanHtml, /id="qr-manual-input"/);
-  assert.match(scanHtml, /Scanner une carte/);
-  for (const page of ['home', 'children', 'child', 'absences']) {
-    const html = P.show(parentData([kid()]), page, 'ELV-000001');
-    assert.ok(!html.includes('qr-video') && !html.includes('startQrScanner') && !html.includes('Scanner une carte'), page);
-  }
+  assert.ok(!P.App.PAGES.includes('scan'));
+  P.show(parentData([kid()]), 'home', 'ELV-000001');
+  P.App.openScanner();
+  assert.equal(P.App.state.scanOpen, true);
+  assert.match(P.el('scan-nav').innerHTML, /id="qr-video"/);
+  assert.match(P.el('scan-nav').innerHTML, /Cadrez le QR code/);
+  P.App.openScanner();
+  assert.equal(P.App.state.scanOpen, false);
+  assert.equal(P.el('scan-nav').innerHTML.includes('qr-video'), false);
   assert.match(read('index.html'), /data-page="scan"[^>]*class="scan-nav"[^>]*onclick="App\.openScanner\(\)"/);
 });
 
