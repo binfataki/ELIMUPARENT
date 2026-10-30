@@ -18,7 +18,7 @@ Le portail parent ne propose pas d’actualisation manuelle. Après connexion, u
 - Pages : Accueil (communiqués) · MES ENFANTS · fiche enfant (finances, absences de la semaine, paiements récents) · détail des absences.
 - Navigation : barre basse mobile Accueil · Mes enfants (onglet plein, plus large) ; menu latéral à partir de 1300 px. Bandeau « MES ENFANTS » en tête de l'accueil. Le bouton « retour » du téléphone navigue dans l'application. Bouton « Quitter » dans l'en-tête.
 - Paiements : seuls ceux des 42 dernières heures sont **affichés** ; les soldes viennent du serveur et utilisent tout l'historique.
-- Scan : disponible uniquement sur l'écran de connexion (grand bouton centré avec viseur). Il n'existe plus dans le portail une fois connecté ; la caméra est coupée dès qu'on navigue ou qu'on se connecte.
+- Scan : le bouton central ouvre une page dédiée temporaire dans le portail connecté (grand bouton avec viseur). Après une lecture réussie, cette page se ferme automatiquement et l'accueil s'affiche ; la caméra est coupée dès qu'on navigue ou qu'on se connecte.
 - Écran QR : case « Mémoriser cet appareil » (décochée par défaut).
 - Rattrapage : à l'ouverture, si le dernier créneau de synchronisation du parent est passé et que le snapshot local est plus ancien, une seule lecture est faite. Les créneaux planifiés sont inchangés.
 - Une panne réseau n'efface plus la session ni le cache ; seuls SESSION_INVALIDE / ACCES_REFUSE / PARENT_NON_CONFIGURE le font.

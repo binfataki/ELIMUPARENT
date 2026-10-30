@@ -369,16 +369,20 @@ function withCamera(P) {
   return track;
 }
 
-test('le scan n’existe qu’à la connexion : plus de page, de bouton ni de fonction de scan dans le portail connecté', () => {
+test('le scan ouvre une page dédiée dans le portail connecté', () => {
   const P = createPortal();
-  assert.equal(P.App.openScanner, undefined);
-  assert.equal(P.App.viewScan, undefined);
-  assert.ok(!P.App.PAGES.includes('scan'));
-  for (const page of ['home', 'children', 'child', 'absences', 'scan']) {
+  assert.equal(typeof P.App.openScanner, 'function');
+  assert.equal(typeof P.App.viewScan, 'function');
+  assert.ok(P.App.PAGES.includes('scan'));
+  const scanHtml = P.show(parentData([kid()]), 'scan', 'ELV-000001');
+  assert.match(scanHtml, /id="qr-video"/);
+  assert.match(scanHtml, /id="qr-manual-input"/);
+  assert.match(scanHtml, /Scanner une carte/);
+  for (const page of ['home', 'children', 'child', 'absences']) {
     const html = P.show(parentData([kid()]), page, 'ELV-000001');
     assert.ok(!html.includes('qr-video') && !html.includes('startQrScanner') && !html.includes('Scanner une carte'), page);
   }
-  assert.ok(!read('index.html').includes('data-page="scan"') && !read('index.html').includes('openScanner'));
+  assert.match(read('index.html'), /data-page="scan"[^>]*class="scan-nav"[^>]*onclick="App\.openScanner\(\)"/);
 });
 
 test('écran de connexion : le scan reste disponible (caméra et saisie manuelle)', () => {
@@ -497,12 +501,12 @@ const read = (f) => fs.readFileSync(path.join(ROOT, f), 'utf8');
 const css = read('styles.css').replace(/\s+/g, ' ');
 const html = read('index.html');
 
-test('barre basse mobile : Accueil + Mes enfants (mis en avant, plus large)', () => {
+test('barre basse mobile : Accueil + Scan au centre + Mes enfants', () => {
   const nav = html.match(/<nav id="bottom-nav"[\s\S]*?<\/nav>/)[0];
   const pages = [...nav.matchAll(/data-page="(\w+)"/g)].map((m) => m[1]);
-  assert.deepEqual(pages, ['home', 'children']);
+  assert.deepEqual(pages, ['home', 'scan', 'children']);
   assert.match(nav, /data-page="children" class="children-nav-btn"[^>]*onclick="App.showChildren\(\)"/);
-  assert.ok(!nav.includes('scan'));
+  assert.match(nav, /data-page="scan" class="scan-nav"[^>]*onclick="App.openScanner\(\)"/);
   assert.match(css, /\.bottom-nav\{position:fixed;left:0;right:0;bottom:0;[^}]*grid-template-columns:1fr 1\.5fr/);
   assert.match(css, /\.bottom-nav button\.children-nav-btn,\.bottom-nav button\.children-nav-btn\.active\{background:var\(--primary\);color:#fff;/);
   assert.match(html, /viewport-fit=cover/);
@@ -514,7 +518,7 @@ test('barre basse fixée en bas de l’écran, sans masquer le contenu', () => {
   assert.ok(m && Number(m[1]) >= 92, 'le contenu défile au-dessus de la barre');
   const fab = css.match(/\.contact-fab\{bottom:calc\((\d+)px/);
   assert.ok(fab && Number(fab[1]) >= 80, 'le bouton WhatsApp est au-dessus de la barre');
-  assert.ok(!css.includes('scan-nav'), 'plus de style du bouton Scan interne');
+  assert.match(css, /\.bottom-nav \.scan-nav\{width:62px;height:62px;min-height:62px/);
 });
 
 test('connexion : bouton de scan centré, grand et bien visible', () => {

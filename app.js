@@ -11,7 +11,7 @@ const App = {
   PAYMENT_WINDOW_HOURS: 42,
   // Tolérance sur l'heure de l'appareil (paiement daté légèrement dans le futur).
   PAYMENT_FUTURE_SKEW_MS: 6 * 60 * 60 * 1000,
-  PAGES: ["home", "children", "child", "absences"],
+  PAGES: ["home", "children", "child", "absences", "scan"],
   // Codes serveur qui signifient que la session n'est plus valable : seuls ces
   // cas effacent la session et le cache local (jamais une simple panne réseau).
   SESSION_ERROR_CODES: ["SESSION_INVALIDE", "ACCES_REFUSE", "PARENT_NON_CONFIGURE"],
@@ -48,6 +48,7 @@ const App = {
       const saved = event.state || {};
       const page = this.PAGES.indexOf(saved.page) >= 0 ? saved.page : "home";
       this.navigate(page, saved.key, { fromHistory: true });
+      if (page === "scan") setTimeout(() => this.startQrScanner(), 0);
     });
   },
 
@@ -302,6 +303,10 @@ const App = {
   showChildren() { this.navigate("children"); },
   openChild(key) { this.navigate("child", key); },
   openAbsences(key) { this.navigate("absences", key); },
+  openScanner() {
+    this.navigate("scan");
+    setTimeout(() => this.startQrScanner(), 0);
+  },
 
   confirmLogout() {
     const message = "Se déconnecter de cet appareil ? Les données enregistrées sur ce téléphone seront effacées.";
@@ -650,6 +655,7 @@ const App = {
     if (this.state.page === "children") return this.viewChildren();
     if (this.state.page === "child") return this.viewChild();
     if (this.state.page === "absences") return this.viewAbsences();
+    if (this.state.page === "scan") return this.viewScan();
     return this.viewHomeNew();
   },
 
@@ -725,6 +731,10 @@ const App = {
     if (!t) return "";
     const offline = typeof navigator !== "undefined" && navigator.onLine === false;
     return `<p class="updated-line meta">${offline ? "Hors connexion · " : ""}Dernière mise à jour : ${this.escapeHtml(this.dateTimeShort(t))}</p>`;
+  },
+
+  viewScan() {
+    return `<button class="back-link" type="button" onclick="App.goHome()">← Accueil</button><section class="card login qr-login"><h2>Scanner une carte</h2><p class="meta">Scannez la carte d’un enfant pour actualiser votre accès. Votre session reste enregistrée telle qu’elle est.</p><div id="login-err" role="alert"></div><div id="qr-scanner" class="qr-scanner" aria-live="polite"><video id="qr-video" autoplay playsinline muted></video><div class="qr-frame" aria-hidden="true"></div><p id="qr-help" class="meta">Cadrez le QR code de la carte.</p><button class="secondary" type="button" onclick="App.stopQrScanner(true);App.goHome()">Fermer la caméra</button><div class="qr-manual"><label for="qr-manual-input">Si la caméra n’est pas disponible</label><div class="row"><input id="qr-manual-input" placeholder="ELV-000001 ou QR complet"><button type="button" onclick="App.loginWithQr(document.getElementById('qr-manual-input').value)">Valider</button></div></div></div></section>`;
   },
 
   viewHomeNew() {

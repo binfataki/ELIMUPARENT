@@ -11,7 +11,7 @@
 <link rel="icon" href="./assets/school-logo.png">
 <link rel="apple-touch-icon" href="./assets/school-logo.png">
 <link rel="manifest" href="./manifest.webmanifest">
-<link rel="stylesheet" href="./styles.css?v=20261030-parent-refonte-3"><link rel="stylesheet" href="./motion.css?v=20261030-parent-refonte-3">
+<link rel="stylesheet" href="./styles.css?v=20261030-parent-refonte-4"><link rel="stylesheet" href="./motion.css?v=20261030-parent-refonte-4">
 </head>
 <body>
 <header class="topbar">
@@ -30,14 +30,15 @@
 <main id="app"><noscript><div class="card">Activez JavaScript pour utiliser le portail.</div></noscript></main>
 <nav id="bottom-nav" class="bottom-nav hidden" aria-label="Navigation principale">
   <button type="button" data-page="home" onclick="App.goHome()"><span aria-hidden="true">⌂</span><small>Accueil</small></button>
+  <button type="button" data-page="scan" class="scan-nav" aria-label="Scanner une carte" onclick="App.openScanner()"><span aria-hidden="true">▣</span><small>Scan</small></button>
   <button type="button" data-page="children" class="children-nav-btn" onclick="App.showChildren()"><span aria-hidden="true">♙</span><small>Mes enfants</small></button>
 </nav>
-<script src="./config.js?v=20261030-parent-refonte-3"></script>
-<script src="./sync-schedule.js?v=20261030-parent-refonte-3"></script>
-<script src="./portal-config.js?v=20261030-parent-refonte-3"></script>
-<script src="./api.js?v=20261030-parent-refonte-3"></script>
-<script src="./storage.js?v=20261030-parent-refonte-3"></script>
-<script src="./app.js?v=20261030-parent-refonte-3"></script><script src="./motion.js?v=20261030-parent-refonte-3"></script>
+<script src="./config.js?v=20261030-parent-refonte-4"></script>
+<script src="./sync-schedule.js?v=20261030-parent-refonte-4"></script>
+<script src="./portal-config.js?v=20261030-parent-refonte-4"></script>
+<script src="./api.js?v=20261030-parent-refonte-4"></script>
+<script src="./storage.js?v=20261030-parent-refonte-4"></script>
+<script src="./app.js?v=20261030-parent-refonte-4"></script><script src="./motion.js?v=20261030-parent-refonte-4"></script>
 <script>if ("serviceWorker" in navigator) window.addEventListener("load", function () { navigator.serviceWorker.register("./sw.js").catch(function () {}); });</script>
 </body>
 </html>
