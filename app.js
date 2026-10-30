@@ -20,7 +20,6 @@ const App = {
     this.bindEvents();
     await this.restoreCachedDashboard();
     this.render();
-    if (this.state.view === "login" && this.state.loginMode === "qr") setTimeout(() => this.startQrScanner(), 0);
     // L'identité distante ne doit pas retarder l'affichage de la vue locale.
     this.loadBranding().then(() => this.render()).catch(() => {});
     // Le cache donne une vue immédiate ; la validation de session et les
@@ -347,8 +346,9 @@ const App = {
         <h2>Espace parent</h2>
         <p class="meta">Scannez la carte de votre enfant pour accéder directement à vos enfants.</p>
         <div id="login-err" role="alert"></div>
+        <button id="qr-open-button" class="qr-primary-button${this.qrOpen ? " hidden" : ""}" type="button" onclick="App.startQrScanner()" aria-label="Ouvrir la caméra pour scanner la carte"><span class="qr-viewfinder" aria-hidden="true"><span class="qr-button-icon">▣</span></span><strong>Scanner la carte de l'enfant</strong><small>Appuyez ici pour ouvrir la caméra</small></button>
         <label class="remember-device" for="remember-device-qr"><input id="remember-device-qr" type="checkbox" ${this.state.rememberDevice ? "checked" : ""}> Mémoriser cet appareil pendant 30 jours</label>
-        <div id="qr-scanner" class="qr-scanner" aria-live="polite">
+        <div id="qr-scanner" class="qr-scanner${this.qrOpen ? "" : " hidden"}" aria-live="polite">
           <video id="qr-video" autoplay playsinline muted></video>
           <div class="qr-frame" aria-hidden="true"></div>
           <p id="qr-help" class="meta">Ouverture de la caméra…</p>
@@ -360,7 +360,7 @@ const App = {
   },
 
   showPhoneLogin() { this.stopQrScanner(false); this.state.loginMode = "phone"; this.render(); },
-  showQrLogin() { this.stopQrScanner(false); this.state.loginMode = "qr"; this.render(); setTimeout(() => this.startQrScanner(), 0); },
+  showQrLogin() { this.stopQrScanner(false); this.qrOpen = false; this.state.loginMode = "qr"; this.render(); },
 
   extractMatricule(value) {
     const raw = String(value || "").trim();
@@ -396,6 +396,11 @@ const App = {
   },
 
   async startQrScanner() {
+    this.qrOpen = true;
+    const openButton = document.getElementById("qr-open-button");
+    const scannerBox = document.getElementById("qr-scanner");
+    if (openButton) openButton.classList.add("hidden");
+    if (scannerBox) scannerBox.classList.remove("hidden");
     const video = document.getElementById("qr-video");
     const help = document.getElementById("qr-help");
     if (!video) return;
@@ -433,7 +438,12 @@ const App = {
     const video = document.getElementById("qr-video");
     if (video) video.srcObject = null;
     const scanner = document.getElementById("qr-scanner");
-    if (reset && scanner) scanner.classList.add("hidden");
+    const openButton = document.getElementById("qr-open-button");
+    if (reset) {
+      this.qrOpen = false;
+      if (scanner) scanner.classList.add("hidden");
+      if (openButton) openButton.classList.remove("hidden");
+    }
   },
 
   sameFamily(a, b) {

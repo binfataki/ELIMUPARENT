@@ -369,12 +369,16 @@ function withCamera(P) {
   return track;
 }
 
-test('le scan principal ouvre directement la caméra sur l’écran de connexion', () => {
+test('le bouton Scan est remplacé visuellement par la caméra', () => {
   const P = createPortal();
   P.App.render();
-  assert.match(P.html(), /id="qr-scanner" class="qr-scanner"/);
+  assert.match(P.html(), /id="qr-open-button" class="qr-primary-button"/);
+  assert.match(P.html(), /id="qr-scanner" class="qr-scanner hidden"/);
+  P.App.startQrScanner();
+  assert.equal(P.App.qrOpen, true);
+  assert.equal(P.el('qr-open-button').classList.contains('hidden'), true);
+  assert.equal(P.el('qr-scanner').classList.contains('hidden'), false);
   assert.match(P.html(), /id="qr-video"/);
-  assert.match(P.html(), /Ouverture de la caméra/);
   assert.ok(!read('index.html').includes('data-page="scan"'));
 });
 
@@ -516,7 +520,7 @@ test('barre basse fixée en bas de l’écran, sans masquer le contenu', () => {
 test('connexion : bouton de scan centré, grand et bien visible', () => {
   const P = createPortal();
   P.App.render();
-  assert.match(P.html(), /<div id="qr-scanner" class="qr-scanner"/);
+  assert.match(P.html(), /<div id="qr-scanner" class="qr-scanner hidden"/);
   assert.match(P.html(), /id="qr-video"/);
   assert.match(css, /\.qr-login\{text-align:center;/);
   assert.match(css, /\.qr-primary-button\{flex-direction:column;[^}]*min-height:220px;margin:18px auto 6px;[^}]*max-width:420px;text-align:center;border:2px solid var\(--secondary\)/);
