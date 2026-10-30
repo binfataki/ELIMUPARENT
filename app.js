@@ -11,7 +11,7 @@ const App = {
   PAYMENT_WINDOW_HOURS: 42,
   // Tolérance sur l'heure de l'appareil (paiement daté légèrement dans le futur).
   PAYMENT_FUTURE_SKEW_MS: 6 * 60 * 60 * 1000,
-  PAGES: ["home", "children", "child", "absences", "scan"],
+  PAGES: ["home", "children", "child", "absences"],
   // Codes serveur qui signifient que la session n'est plus valable : seuls ces
   // cas effacent la session et le cache local (jamais une simple panne réseau).
   SESSION_ERROR_CODES: ["SESSION_INVALIDE", "ACCES_REFUSE", "PARENT_NON_CONFIGURE"],
@@ -48,7 +48,6 @@ const App = {
       const saved = event.state || {};
       const page = this.PAGES.indexOf(saved.page) >= 0 ? saved.page : "home";
       this.navigate(page, saved.key, { fromHistory: true });
-      if (page === "scan") setTimeout(() => this.startQrScanner(), 0);
     });
   },
 
@@ -278,12 +277,12 @@ const App = {
   },
 
   // ───────────── Navigation ─────────────
-  // Point d'entrée unique : quitter la page Scan coupe toujours la caméra.
+  // Point d'entrée unique. Le scan n'existe que sur l'écran de connexion :
+  // toute navigation dans le portail coupe donc la caméra par sécurité.
   navigate(page, key, options = {}) {
-    if (page !== "scan") this.stopQrScanner(false);
+    this.stopQrScanner(false);
     this.state.page = page;
     if (key !== undefined && key !== null) this.state.selectedChild = String(key);
-    if (page === "scan") this.state.qrLoading = false;
     if (!options.fromHistory) this.pushHistory(page, this.state.selectedChild);
     this.render();
     try { if (typeof window.scrollTo === "function") window.scrollTo(0, 0); } catch (_) {}
@@ -303,10 +302,6 @@ const App = {
   showChildren() { this.navigate("children"); },
   openChild(key) { this.navigate("child", key); },
   openAbsences(key) { this.navigate("absences", key); },
-  openScanner() {
-    this.navigate("scan");
-    setTimeout(() => this.startQrScanner(), 0);
-  },
 
   confirmLogout() {
     const message = "Se déconnecter de cet appareil ? Les données enregistrées sur ce téléphone seront effacées.";
@@ -351,7 +346,7 @@ const App = {
         <h2>Espace parent</h2>
         <p class="meta">Scannez la carte de votre enfant pour accéder directement à vos enfants.</p>
         <div id="login-err" role="alert"></div>
-        <button class="qr-primary-button" type="button" onclick="App.startQrScanner()"><span class="qr-button-icon" aria-hidden="true">▣</span><span><strong>Scanner la carte de l'enfant</strong><small>Appuyez ici pour ouvrir la caméra</small></span></button>
+        <button class="qr-primary-button" type="button" onclick="App.startQrScanner()" aria-label="Scanner la carte de l'enfant pour se connecter"><span class="qr-viewfinder" aria-hidden="true"><span class="qr-button-icon">▣</span></span><strong>Scanner la carte de l'enfant</strong><small>Appuyez ici pour ouvrir la caméra</small></button>
         <label class="remember-device" for="remember-device-qr"><input id="remember-device-qr" type="checkbox" ${this.state.rememberDevice ? "checked" : ""}> Mémoriser cet appareil pendant 30 jours</label>
         <div id="qr-scanner" class="qr-scanner hidden" aria-live="polite">
           <video id="qr-video" autoplay playsinline muted></video>
@@ -501,10 +496,6 @@ const App = {
       const qrHelp = document.getElementById("qr-help");
       if (loginError) loginError.innerHTML = `<div class="err-box">${this.escapeHtml(e.message)}</div>`;
       if (qrHelp) qrHelp.textContent = "Carte non reconnue. Réessayez ou utilisez le numéro de téléphone.";
-      // Parent connecté sur la page Scan : la caméra reprend après une courte pause.
-      if (scanned && this.state.view === "dashboard" && this.state.page === "scan") {
-        setTimeout(() => { if (this.state.view === "dashboard" && this.state.page === "scan" && !this.qrStream) this.startQrScanner(); }, 2500);
-      }
     }
   },
 
@@ -659,7 +650,6 @@ const App = {
     if (this.state.page === "children") return this.viewChildren();
     if (this.state.page === "child") return this.viewChild();
     if (this.state.page === "absences") return this.viewAbsences();
-    if (this.state.page === "scan") return this.viewScan();
     return this.viewHomeNew();
   },
 
@@ -744,7 +734,8 @@ const App = {
     const notifications = typeof Notification !== "undefined" && Notification.permission !== "granted"
       ? `<div class="card notification-settings"><div><strong>Recevoir les nouveaux communiqués</strong><div class="meta">Le navigateur peut afficher une notification lorsque la page est ouverte.</div></div><button class="secondary" onclick="App.enableNotifications()">Activer</button></div>` : "";
     // Les retours à la ligne sont rendus par white-space: pre-wrap (CSS), sans <br>.
-    return `<section class="page-heading"><span class="eyebrow">Accueil</span><h2>Communiqués de l’établissement</h2><p class="meta">Les informations importantes sont regroupées ici.</p></section>${latest ? `<div class="card announcements-priority"><div class="announcement-heading"><span><span class="announcement-label">Dernier communiqué</span><span class="announcement-title">${this.escapeHtml(latest.titre || "Communiqué")}</span></span><time class="announcement-date">${this.escapeHtml(this.communiqueDate(latest))}</time></div><div class="announcement-message">${this.escapeHtml(latest.message || "")}</div></div>` : `<div class="card"><div class="empty">Aucun communiqué disponible.</div></div>`}${older.length ? `<div class="card announcements-history"><details><summary>Voir les anciens communiqués (${older.length})</summary><div class="announcement-list">${older.map((c) => `<details class="announcement-item"><summary><span class="announcement-title">${this.escapeHtml(c.titre || "Communiqué")}</span><time class="announcement-date">${this.escapeHtml(this.communiqueDate(c))}</time></summary><div class="announcement-message">${this.escapeHtml(c.message || "")}</div></details>`).join("")}</div></details></div>` : ""}${notifications}${this.updatedLine()}`;
+    const childrenCta = `<button class="children-cta" type="button" onclick="App.showChildren()"><span class="children-cta-icon" aria-hidden="true">♙</span><span class="children-cta-text"><strong>MES ENFANTS</strong><small>Finances, absences et paiements</small></span><span class="child-arrow" aria-hidden="true">›</span></button>`;
+    return `${childrenCta}<section class="page-heading"><span class="eyebrow">Accueil</span><h2>Communiqués de l’établissement</h2><p class="meta">Les informations importantes sont regroupées ici.</p></section>${latest ? `<div class="card announcements-priority"><div class="announcement-heading"><span><span class="announcement-label">Dernier communiqué</span><span class="announcement-title">${this.escapeHtml(latest.titre || "Communiqué")}</span></span><time class="announcement-date">${this.escapeHtml(this.communiqueDate(latest))}</time></div><div class="announcement-message">${this.escapeHtml(latest.message || "")}</div></div>` : `<div class="card"><div class="empty">Aucun communiqué disponible.</div></div>`}${older.length ? `<div class="card announcements-history"><details><summary>Voir les anciens communiqués (${older.length})</summary><div class="announcement-list">${older.map((c) => `<details class="announcement-item"><summary><span class="announcement-title">${this.escapeHtml(c.titre || "Communiqué")}</span><time class="announcement-date">${this.escapeHtml(this.communiqueDate(c))}</time></summary><div class="announcement-message">${this.escapeHtml(c.message || "")}</div></details>`).join("")}</div></details></div>` : ""}${notifications}${this.updatedLine()}`;
   },
 
   viewChildren() {
@@ -775,10 +766,6 @@ const App = {
     const abs = this.absenceSummary(e.absences), days = e.absences.jours;
     const period = abs.period ? `Semaine du ${abs.period}` : "Semaine en cours";
     return `<button class="back-link" type="button" data-open-child="${this.escapeHtml(e.key)}">← Fiche de l’enfant</button><section class="page-heading"><span class="eyebrow">Présences</span><h2>Absences de la semaine</h2><p class="meta">${this.escapeHtml(this.childName(e))} · ${this.escapeHtml(period)}</p></section><div class="card">${days.length ? days.map((day) => `<div class="list-item absence-day"><strong>${this.escapeHtml(this.dayLabel(day.date))}</strong><span class="badge danger-badge">Absent</span></div>`).join("") : `<div class="empty">${abs.stale ? "Aucune absence enregistrée pour la dernière semaine synchronisée." : "Aucune absence enregistrée pour cette semaine."}</div>`}${abs.stale ? `<p class="stale-note meta">Ces informations datent de la dernière synchronisation. La semaine en cours apparaîtra à la prochaine mise à jour.</p>` : ""}</div>${this.updatedLine()}`;
-  },
-
-  viewScan() {
-    return `<button class="back-link" type="button" onclick="App.goHome()">← Accueil</button><section class="card login qr-login"><h2>Scanner une carte</h2><p class="meta">Scannez la carte d’un enfant pour actualiser votre accès. Votre session reste enregistrée telle qu’elle est.</p><div id="login-err" role="alert"></div><div id="qr-scanner" class="qr-scanner" aria-live="polite"><video id="qr-video" autoplay playsinline muted></video><div class="qr-frame" aria-hidden="true"></div><p id="qr-help" class="meta">Cadrez le QR code de la carte.</p><button class="secondary" type="button" onclick="App.stopQrScanner(true);App.goHome()">Fermer la caméra</button><div class="qr-manual"><label for="qr-manual-input">Si la caméra n’est pas disponible</label><div class="row"><input id="qr-manual-input" placeholder="ELV-000001 ou QR complet"><button type="button" onclick="App.loginWithQr(document.getElementById('qr-manual-input').value)">Valider</button></div></div></div></section>`;
   },
 
   fmt(n, overrideCurrency) {

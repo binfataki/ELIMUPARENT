@@ -1,5 +1,5 @@
-const CACHE = "elimu-parent-pwa-20261030-refonte-v2";
-const CORE = ["./", "./index.html", "./styles.css?v=20261030-parent-refonte-2", "./config.js?v=20261030-parent-refonte-2", "./sync-schedule.js?v=20261030-parent-refonte-2", "./portal-config.js?v=20261030-parent-refonte-2", "./api.js?v=20261030-parent-refonte-2", "./storage.js?v=20261030-parent-refonte-2", "./app.js?v=20261030-parent-refonte-2", "./motion.js?v=20261030-parent-refonte-2", "./motion.css?v=20261030-parent-refonte-2", "./manifest.webmanifest", "./assets/school-logo.png", "./assets/static/whatsapp-icon.png"];
+const CACHE = "elimu-parent-pwa-20261030-refonte-v3";
+const CORE = ["./", "./index.html", "./styles.css?v=20261030-parent-refonte-3", "./config.js?v=20261030-parent-refonte-3", "./sync-schedule.js?v=20261030-parent-refonte-3", "./portal-config.js?v=20261030-parent-refonte-3", "./api.js?v=20261030-parent-refonte-3", "./storage.js?v=20261030-parent-refonte-3", "./app.js?v=20261030-parent-refonte-3", "./motion.js?v=20261030-parent-refonte-3", "./motion.css?v=20261030-parent-refonte-3", "./manifest.webmanifest", "./assets/school-logo.png", "./assets/static/whatsapp-icon.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE).then((c) => Promise.allSettled(CORE.map((u) => c.add(u)))).then(() => self.skipWaiting()));

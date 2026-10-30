@@ -19,8 +19,7 @@ h1,h2,h3,p{margin:0}
 
 main{max-width:900px;margin:0 auto;padding:14px max(12px,env(safe-area-inset-left)) calc(92px + env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-right))}
 .page-heading{margin:8px 2px 16px}.page-heading h2{font-size:24px;color:var(--primary);margin:2px 0 4px}.eyebrow{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#8e6814}.back-link{padding:0 4px;margin:2px 0 12px;background:transparent;color:var(--primary);min-height:36px}.section-title{font-size:16px;color:var(--primary);margin-bottom:10px}.children-list{display:grid;gap:10px}.child-card{width:100%;display:flex;align-items:center;gap:12px;text-align:left;background:#fff;color:var(--text);border:1px solid var(--border);box-shadow:0 8px 20px rgba(22,51,92,.05);min-height:72px}.child-avatar{display:grid;place-items:center;width:42px;height:42px;border-radius:50%;background:#e9f0fb;color:var(--primary);font-weight:800;flex:none}.child-card-text{display:grid;gap:2px;flex:1;min-width:0}.child-card-text strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.child-card-text span{color:var(--muted);font-size:13px}.child-arrow{font-size:28px;color:var(--secondary)}.absence-indicator{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;margin-bottom:12px;border:1px solid var(--border);border-left:5px solid var(--ok);border-radius:var(--radius);background:#f7fcf8}.absence-indicator.has-absence{border-left-color:var(--danger);background:#fff7f5}.absence-indicator strong,.absence-indicator .meta{display:block}.absence-indicator .meta{margin-top:3px}.danger-badge{background:#fbe9e7;color:var(--danger)}
-.bottom-nav{position:fixed;left:0;right:0;bottom:0;z-index:30;display:grid;grid-template-columns:1fr 1fr 1fr;padding:8px max(12px,env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));background:rgba(255,255,255,.96);border-top:1px solid var(--border);box-shadow:0 -8px 24px rgba(22,51,92,.12);backdrop-filter:blur(12px)}.bottom-nav button{min-height:52px;padding:4px;background:transparent;color:var(--muted);display:grid;place-items:center;gap:1px;font-size:20px}.bottom-nav button small{font-size:11px;font-weight:700}.bottom-nav button.active{color:var(--primary)}.bottom-nav .scan-nav{width:62px;height:62px;min-height:62px;margin:-22px auto 0;border:4px solid #fff;border-radius:50%;background:var(--primary);color:#fff;box-shadow:0 7px 18px rgba(9,44,99,.3)}.bottom-nav .scan-nav small{font-size:10px}
-#mes-enfants{scroll-margin-top:84px}
+.bottom-nav{position:fixed;left:0;right:0;bottom:0;z-index:30;display:grid;grid-template-columns:1fr 1.5fr;gap:10px;padding:8px max(12px,env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));background:rgba(255,255,255,.96);border-top:1px solid var(--border);box-shadow:0 -8px 24px rgba(22,51,92,.12);backdrop-filter:blur(12px)}.bottom-nav button{min-height:52px;padding:4px;background:transparent;color:var(--muted);display:grid;place-items:center;gap:1px;font-size:20px}.bottom-nav button small{font-size:11px;font-weight:700}.bottom-nav button.active{color:var(--primary)}#mes-enfants{scroll-margin-top:84px}
 .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px;box-shadow:0 8px 24px rgba(22,51,92,.05)}
 .card h2{font-size:17px;color:var(--primary);margin-bottom:8px;letter-spacing:-.01em}
 .card .card{box-shadow:none;background:#f8fafd}
@@ -126,9 +125,8 @@ button.absence-indicator strong{font-size:16px;color:var(--text)}
 .updated-line{text-align:center;margin:14px 0 4px}
 .stale-note{margin-top:12px;padding:10px 12px;border-radius:10px;background:#fff8e6;border:1px solid #f0d58a;color:#6b5210}
 .children-list.single{max-width:560px}
-/* Barre de navigation mobile : Accueil · Scan (centre) · Mes enfants */
+/* Barre de navigation : Accueil · Mes enfants (mis en avant) */
 .bottom-nav button.active{color:var(--primary);box-shadow:inset 0 -3px 0 var(--secondary)}
-.bottom-nav .scan-nav.active{box-shadow:0 0 0 3px var(--secondary),0 7px 18px rgba(9,44,99,.3)}
 /* Le bouton WhatsApp reste accessible au-dessus de la barre, sans la recouvrir */
 .contact-fab{bottom:calc(88px + env(safe-area-inset-bottom))}
 .contact-fab .whatsapp-btn{width:52px;height:52px;min-height:52px;padding:0;justify-content:center}
@@ -146,12 +144,44 @@ main{padding-bottom:calc(156px + env(safe-area-inset-bottom))}
   .bottom-nav button:hover{background:#eef3fa}
   .bottom-nav button small{font-size:15px}
   .bottom-nav button.active{background:#e6eefb;box-shadow:none}
-  .bottom-nav .scan-nav{width:auto;height:auto;min-height:48px;margin:0;border:0;border-radius:10px;background:var(--primary);color:#fff;box-shadow:none;justify-content:center}
-  .bottom-nav .scan-nav:hover{background:#0b3a80}
-  .bottom-nav .scan-nav small{font-size:15px}
-  .bottom-nav .scan-nav.active{box-shadow:0 0 0 3px var(--secondary)}
+  .bottom-nav button.children-nav-btn,.bottom-nav button.children-nav-btn.active,.bottom-nav button.children-nav-btn:hover{background:var(--primary);color:#fff}
+  .bottom-nav button.children-nav-btn.active{box-shadow:0 0 0 3px rgba(230,181,42,.45)}
   .contact-fab{bottom:24px}
   .contact-fab .whatsapp-btn{width:auto;height:auto;min-height:48px;padding:0 16px 0 12px}
   .contact-fab .whatsapp-btn span{position:static;width:auto;height:auto;overflow:visible;clip:auto}
   .toast{bottom:24px}
 }
+
+/* ───────── Ajustements : connexion par scan et navigation ───────── */
+/* Connexion : bouton de scan centré, grand, avec viseur doré */
+.qr-login{text-align:center;margin-top:clamp(12px,9vh,90px)}
+.qr-login h2,.qr-login .meta{text-align:center}
+.qr-primary-button{flex-direction:column;gap:8px;min-height:220px;margin:18px auto 6px;padding:22px 16px;max-width:420px;text-align:center;border:2px solid var(--secondary);color:#fff}
+.qr-primary-button strong{font-size:21px;line-height:1.25;color:#fff}
+.qr-primary-button small{font-size:14px;opacity:.95;margin-top:0;color:#fff}
+.qr-viewfinder{position:relative;display:grid;place-items:center;width:92px;height:92px;margin-bottom:6px;border-radius:12px;
+  background:
+    linear-gradient(var(--secondary),var(--secondary)) top left/26px 5px no-repeat,linear-gradient(var(--secondary),var(--secondary)) top left/5px 26px no-repeat,
+    linear-gradient(var(--secondary),var(--secondary)) top right/26px 5px no-repeat,linear-gradient(var(--secondary),var(--secondary)) top right/5px 26px no-repeat,
+    linear-gradient(var(--secondary),var(--secondary)) bottom left/26px 5px no-repeat,linear-gradient(var(--secondary),var(--secondary)) bottom left/5px 26px no-repeat,
+    linear-gradient(var(--secondary),var(--secondary)) bottom right/26px 5px no-repeat,linear-gradient(var(--secondary),var(--secondary)) bottom right/5px 26px no-repeat;
+  animation:qr-pulse 2.2s ease-in-out infinite}
+.qr-primary-button .qr-button-icon{font-size:46px;line-height:1;color:#fff}
+@keyframes qr-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+@media (prefers-reduced-motion:reduce){.qr-viewfinder{animation:none}}
+.qr-login .remember-device{justify-content:center}
+.qr-login .phone-login-button{max-width:420px;margin-left:auto;margin-right:auto;display:block}
+/* Accueil : accès direct et bien visible à « MES ENFANTS » */
+.children-cta{display:flex;align-items:center;gap:14px;width:100%;min-height:72px;margin:4px 0 14px;padding:14px 16px;text-align:left;border:2px solid var(--secondary);border-radius:var(--radius);background:var(--primary);color:#fff;box-shadow:0 8px 20px rgba(9,44,99,.25)}
+.children-cta-icon{display:grid;place-items:center;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.16);font-size:26px;flex:none}
+.children-cta-text{display:grid;gap:2px;flex:1;min-width:0}
+.children-cta-text strong{font-size:18px;letter-spacing:.03em;color:#fff}
+.children-cta-text small{font-size:13px;font-weight:400;color:#fff;opacity:.9}
+.children-cta .child-arrow{color:var(--secondary)}
+/* Barre basse : « Mes enfants » plein et plus large, Accueil discret */
+.bottom-nav button{display:flex;flex-direction:row;align-items:center;justify-content:center;gap:8px;min-height:56px;font-size:20px;border-radius:14px}
+.bottom-nav button small{font-size:14px}
+.bottom-nav button.children-nav-btn,.bottom-nav button.children-nav-btn.active{background:var(--primary);color:#fff;border:2px solid var(--secondary)}
+.bottom-nav button.children-nav-btn.active{box-shadow:0 0 0 3px rgba(230,181,42,.45)}
+.bottom-nav button[data-page="home"].active{box-shadow:inset 0 -3px 0 var(--secondary)}
+

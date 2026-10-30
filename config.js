@@ -11,3 +11,4 @@ window.ELIMU_getCentralAppsScriptUrl = function () {
   return window.ELIMU_ESTABLISHMENT_CONFIG.appsScriptUrl;
 };
 
+

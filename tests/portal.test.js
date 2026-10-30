@@ -283,23 +283,20 @@ test('scan d’une autre famille acceptée : changement de compte, la session re
   assert.equal(P.App.state.phone, '');
 });
 
-test('scan en échec pendant une session connectée : session et données intactes', async () => {
+test('garde-fou : un échec de lecture de carte n’altère jamais une session connectée', async () => {
   const P = createPortal();
   await phoneLogin(P, true);
-  P.App.openScanner();
   P.api.createParentSessionFromQr = async () => { throw new Error('Cette carte n’est pas reconnue par l’établissement.'); };
   P.log.length = 0;
   await P.App.loginWithQr('ELV-INCONNU');
   assert.equal(P.App.state.view, 'dashboard');
   assert.equal(P.App.state.data.enfants[0].matricule, 'ELV-000001');
   assert.deepEqual(P.log.filter((l) => l[0] === 'delete'), []);
-  assert.match(P.el('login-err').innerHTML, /pas reconnue/);
 });
 
-test('l’écran de chargement du scan s’affiche aussi depuis la page Scan connectée', async () => {
+test('l’écran de chargement s’affiche pendant la vérification de la carte (connexion)', async () => {
   const P = createPortal();
-  await phoneLogin(P, true);
-  P.App.openScanner();
+  P.App.render();
   let seen = '';
   P.api.createParentSessionFromQr = async () => { seen = P.html(); return session([kid()], 'tok-qr'); };
   await P.App.loginWithQr('ELV-000001');
@@ -372,10 +369,32 @@ function withCamera(P) {
   return track;
 }
 
-test('quitter la page Scan par la navigation coupe la caméra (Accueil, Mes enfants, fiche, absences)', () => {
+test('le scan n’existe qu’à la connexion : plus de page, de bouton ni de fonction de scan dans le portail connecté', () => {
+  const P = createPortal();
+  assert.equal(P.App.openScanner, undefined);
+  assert.equal(P.App.viewScan, undefined);
+  assert.ok(!P.App.PAGES.includes('scan'));
+  for (const page of ['home', 'children', 'child', 'absences', 'scan']) {
+    const html = P.show(parentData([kid()]), page, 'ELV-000001');
+    assert.ok(!html.includes('qr-video') && !html.includes('startQrScanner') && !html.includes('Scanner une carte'), page);
+  }
+  assert.ok(!read('index.html').includes('data-page="scan"') && !read('index.html').includes('openScanner'));
+});
+
+test('écran de connexion : le scan reste disponible (caméra et saisie manuelle)', () => {
+  const P = createPortal();
+  P.App.render();
+  const html = P.html();
+  assert.match(html, /onclick="App\.startQrScanner\(\)"/);
+  assert.match(html, /id="qr-video"/);
+  assert.match(html, /id="qr-manual-input"/);
+  assert.match(html, /Se connecter avec le numéro de téléphone/);
+});
+
+test('naviguer dans le portail coupe toujours la caméra (Accueil, Mes enfants, fiche, absences)', () => {
   for (const leave of [(A) => A.goHome(), (A) => A.showChildren(), (A) => A.openChild('ELV-000001'), (A) => A.openAbsences('ELV-000001')]) {
     const P = createPortal();
-    P.show(parentData([kid()]), 'scan');
+    P.show(parentData([kid()]), 'home');
     const track = withCamera(P);
     leave(P.App);
     assert.equal(track.stopped, 1);
@@ -383,23 +402,36 @@ test('quitter la page Scan par la navigation coupe la caméra (Accueil, Mes enfa
   }
 });
 
-test('bouton retour du téléphone (popstate) et « Fermer la caméra » coupent la caméra', () => {
+test('connexion : la caméra s’arrête au passage au numéro de téléphone, à la fermeture et après un scan réussi', async () => {
   let P = createPortal();
+  P.App.render(); let track = withCamera(P);
+  P.App.showPhoneLogin();
+  assert.equal(track.stopped, 1);
+
+  P = createPortal();
+  P.App.render(); track = withCamera(P);
+  P.App.stopQrScanner(true);
+  assert.equal(track.stopped, 1);
+
+  P = createPortal();
+  P.App.render(); track = withCamera(P);
+  P.api.createParentSessionFromQr = async () => session([kid()], 'tok-qr');
+  await P.App.loginWithQr('ELV-000001', true);
+  assert.equal(track.stopped, 1);
+  assert.equal(P.App.state.view, 'dashboard');
+});
+
+test('bouton retour du téléphone (popstate) coupe la caméra et ramène à l’accueil', () => {
+  const P = createPortal();
   P.App.bindEvents(); // normalement appelé par init()
-  P.show(parentData([kid()]), 'scan');
-  let track = withCamera(P);
+  P.show(parentData([kid()]), 'children');
+  const track = withCamera(P);
   P.listeners.popstate.forEach((fn) => fn({ state: { page: 'home', key: '' } }));
   assert.equal(track.stopped, 1);
   assert.equal(P.App.state.page, 'home');
-
-  P = createPortal();
-  P.show(parentData([kid()]), 'scan');
-  track = withCamera(P);
-  P.App.stopQrScanner(true); P.App.goHome();
-  assert.equal(track.stopped, 1);
 });
 
-test('filet de sécurité : un rendu hors page Scan ne laisse jamais la caméra allumée ; déconnexion aussi', () => {
+test('filet de sécurité : un rendu du tableau de bord ne laisse jamais la caméra allumée ; déconnexion aussi', () => {
   let P = createPortal();
   P.show(parentData([kid()]), 'home');
   let track = withCamera(P);
@@ -407,40 +439,46 @@ test('filet de sécurité : un rendu hors page Scan ne laisse jamais la caméra 
   assert.equal(track.stopped, 1);
 
   P = createPortal();
-  P.show(parentData([kid()]), 'scan');
+  P.show(parentData([kid()]), 'home');
   track = withCamera(P);
   P.App.logout();
   assert.equal(track.stopped, 1);
 });
 
-test('ouvrir la page Scan ne coupe pas la caméra et ne la relance pas en double lors d’un rendu', () => {
+test('connexion : un rendu pendant le scan garde la caméra reliée à l’écran', () => {
   const P = createPortal();
-  P.show(parentData([kid()]), 'home');
+  P.App.render();
   const track = withCamera(P);
-  P.App.openScanner();
-  assert.equal(P.App.state.page, 'scan');
-  P.App.render(); // actualisation planifiée pendant le scan
+  P.App.render(); // actualisation planifiée ou identité chargée pendant le scan
   assert.equal(track.stopped, 0);
   assert.ok(P.html().includes('id="qr-video"'));
-  assert.ok(P.html().includes('id="qr-manual-input"'), 'saisie manuelle conservée');
 });
 
-test('navigation : section active (fiche et absences ⇒ Mes enfants), historique et bouton Quitter', () => {
+test('navigation : Accueil et Mes enfants, fiche et absences restent dans « Mes enfants »', () => {
   const P = createPortal();
   const active = () => P.nav.filter((b) => b.classList.contains('active')).map((b) => b.dataset.page);
   P.show(parentData([kid()]), 'home');
   assert.deepEqual(active(), ['home']);
-  P.App.openScanner(); assert.deepEqual(active(), ['scan']);
   P.App.showChildren(); assert.deepEqual(active(), ['children']);
   P.App.openChild('ELV-000001'); assert.deepEqual(active(), ['children']);
   P.App.openAbsences('ELV-000001'); assert.deepEqual(active(), ['children']);
   assert.equal(P.nav.find((b) => b.dataset.page === 'children').getAttribute('aria-current'), 'page');
   assert.equal(P.navEl.classList.contains('hidden'), false);
   assert.equal(P.el('logout-btn').classList.contains('hidden'), false);
-  assert.deepEqual(P.pushed.map((s) => s.page), ['scan', 'children', 'child', 'absences']);
+  assert.deepEqual(P.pushed.map((s) => s.page), ['children', 'child', 'absences']);
   P.App.logout();
   assert.equal(P.navEl.classList.contains('hidden'), true);
   assert.equal(P.el('logout-btn').classList.contains('hidden'), true);
+});
+
+test('accueil : accès direct « MES ENFANTS » en premier, avant les communiqués', () => {
+  const P = createPortal();
+  const html = P.show(parentData([kid()], { communications: [{ titre: 'Info', message: 'm', date: '2026-10-29T08:00:00' }] }), 'home');
+  assert.match(html, /^<button class="children-cta" type="button" onclick="App\.showChildren\(\)">/);
+  assert.ok(html.indexOf('MES ENFANTS') < html.indexOf('Communiqués de l’établissement'));
+  assert.ok(html.indexOf('MES ENFANTS') < html.indexOf('Dernier communiqué'));
+  // et l'accueil sans communiqué garde son message clair
+  assert.match(P.show(parentData([kid()]), 'home'), /MES ENFANTS[\s\S]*Aucun communiqué disponible\./);
 });
 
 test('déconnexion volontaire : confirmation, puis session et cache effacés', async () => {
@@ -459,23 +497,34 @@ const read = (f) => fs.readFileSync(path.join(ROOT, f), 'utf8');
 const css = read('styles.css').replace(/\s+/g, ' ');
 const html = read('index.html');
 
-test('barre basse mobile : Accueil · Scan (centre) · Mes enfants', () => {
+test('barre basse mobile : Accueil + Mes enfants (mis en avant, plus large)', () => {
   const nav = html.match(/<nav id="bottom-nav"[\s\S]*?<\/nav>/)[0];
   const pages = [...nav.matchAll(/data-page="(\w+)"/g)].map((m) => m[1]);
-  assert.deepEqual(pages, ['home', 'scan', 'children']);
-  assert.match(nav, /data-page="scan" class="scan-nav"[^>]*>[\s\S]*<small>Scan<\/small>/);
-  assert.match(nav, /onclick="App.openScanner\(\)"/);
+  assert.deepEqual(pages, ['home', 'children']);
+  assert.match(nav, /data-page="children" class="children-nav-btn"[^>]*onclick="App.showChildren\(\)"/);
+  assert.ok(!nav.includes('scan'));
+  assert.match(css, /\.bottom-nav\{position:fixed;left:0;right:0;bottom:0;[^}]*grid-template-columns:1fr 1\.5fr/);
+  assert.match(css, /\.bottom-nav button\.children-nav-btn,\.bottom-nav button\.children-nav-btn\.active\{background:var\(--primary\);color:#fff;/);
   assert.match(html, /viewport-fit=cover/);
 });
 
-test('bouton Scan en bas de l’écran, zone du pouce, sans masquer le contenu', () => {
-  assert.match(css, /\.bottom-nav\{position:fixed;left:0;right:0;bottom:0;/);
-  assert.match(css, /\.bottom-nav \.scan-nav\{width:62px;height:62px;/);
+test('barre basse fixée en bas de l’écran, sans masquer le contenu', () => {
   assert.match(css, /safe-area-inset-bottom/);
   const m = css.match(/main\{padding-bottom:calc\((\d+)px \+ env\(safe-area-inset-bottom\)\)\}/);
-  assert.ok(m && Number(m[1]) >= 92, 'le contenu défile au-dessus de la barre (62 px de bouton + marges)');
+  assert.ok(m && Number(m[1]) >= 92, 'le contenu défile au-dessus de la barre');
   const fab = css.match(/\.contact-fab\{bottom:calc\((\d+)px/);
   assert.ok(fab && Number(fab[1]) >= 80, 'le bouton WhatsApp est au-dessus de la barre');
+  assert.ok(!css.includes('scan-nav'), 'plus de style du bouton Scan interne');
+});
+
+test('connexion : bouton de scan centré, grand et bien visible', () => {
+  const P = createPortal();
+  P.App.render();
+  assert.match(P.html(), /<button class="qr-primary-button"[^>]*><span class="qr-viewfinder" aria-hidden="true">[\s\S]*Scanner la carte de l'enfant[\s\S]*Appuyez ici pour ouvrir la caméra/);
+  assert.match(css, /\.qr-login\{text-align:center;/);
+  assert.match(css, /\.qr-primary-button\{flex-direction:column;[^}]*min-height:220px;margin:18px auto 6px;[^}]*max-width:420px;text-align:center;border:2px solid var\(--secondary\)/);
+  assert.match(css, /\.qr-viewfinder\{[^}]*animation:qr-pulse/);
+  assert.match(css, /prefers-reduced-motion:reduce\)\{\.qr-viewfinder\{animation:none\}/);
 });
 
 test('cibles tactiles d’au moins 44 px', () => {
@@ -490,7 +539,7 @@ test('affichage ordinateur : menu latéral à partir de 1300 px, grille de carte
   const desktop = css.trim().match(/@media \(min-width:1300px\)\{(.*)\}$/)[1];
   assert.match(desktop, /\.bottom-nav\{left:calc\(50% - 450px - 210px\);[^}]*top:112px;[^}]*grid-template-columns:1fr/);
   assert.match(desktop, /\.bottom-nav button:hover/);
-  assert.match(desktop, /\.bottom-nav \.scan-nav\{width:auto;height:auto;/);
+  assert.match(desktop, /\.bottom-nav button\.children-nav-btn,\.bottom-nav button\.children-nav-btn\.active,\.bottom-nav button\.children-nav-btn:hover\{background:var\(--primary\);color:#fff\}/);
   assert.match(css, /@media \(min-width:640px\)\{ \.children-list:not\(\.single\)\{grid-template-columns:repeat\(auto-fill,minmax\(300px,1fr\)\)\}/);
 });
 
