@@ -259,6 +259,13 @@ const App = {
         button.classList.toggle("active", active);
         button.setAttribute("aria-current", active ? "page" : "false");
       });
+      const backButton = document.getElementById("bottom-back");
+      if (backButton) {
+        const hasBack = this.state.page !== "home";
+        bottomNav.classList.toggle("has-back", hasBack);
+        backButton.classList.toggle("hidden", !hasBack);
+        backButton.setAttribute("aria-hidden", hasBack ? "false" : "true");
+      }
     }
     this.applyBranding();
     this.refreshStatusPill();
@@ -301,6 +308,11 @@ const App = {
   childByKey(key) { return ((this.state.data && this.state.data.enfants) || []).find((child) => this.childKey(child) === String(key)) || null; },
   goHome() { this.navigate("home"); },
   showChildren() { this.navigate("children"); },
+  goBack() {
+    if (this.state.page === "absences" || this.state.page === "child") return this.showChildren();
+    if (this.state.page === "children") return this.goHome();
+    return this.goHome();
+  },
   openChild(key) { this.navigate("child", key); },
   openAbsences(key) { this.navigate("absences", key); },
   confirmLogout() {

@@ -1,5 +1,5 @@
-const CACHE = "elimu-parent-pwa-20261030-refonte-v4";
-const CORE = ["./", "./index.html", "./styles.css?v=20261030-parent-refonte-4", "./config.js?v=20261030-parent-refonte-4", "./sync-schedule.js?v=20261030-parent-refonte-4", "./portal-config.js?v=20261030-parent-refonte-4", "./api.js?v=20261030-parent-refonte-4", "./storage.js?v=20261030-parent-refonte-4", "./app.js?v=20261030-parent-refonte-4", "./motion.js?v=20261030-parent-refonte-4", "./motion.css?v=20261030-parent-refonte-4", "./manifest.webmanifest", "./assets/school-logo.png", "./assets/static/whatsapp-icon.png"];
+const CACHE = "elimu-parent-pwa-20261102-pro-v1";
+const CORE = ["./", "./index.html", "./styles.css?v=20261102-parent-pro-1", "./config.js?v=20261102-parent-pro-1", "./sync-schedule.js?v=20261102-parent-pro-1", "./portal-config.js?v=20261102-parent-pro-1", "./api.js?v=20261102-parent-pro-1", "./storage.js?v=20261102-parent-pro-1", "./app.js?v=20261102-parent-pro-1", "./motion.js?v=20261102-parent-pro-1", "./motion.css?v=20261102-parent-pro-1", "./manifest.webmanifest", "./assets/school-logo.png", "./assets/static/whatsapp-icon.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE).then((c) => Promise.allSettled(CORE.map((u) => c.add(u)))).then(() => self.skipWaiting()));
